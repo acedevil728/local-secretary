@@ -1,6 +1,6 @@
 [project]
 name = "local-secretary"
-version = "0.2.2"
+version = "0.2.3"
 description = "공유형 개인 비서 & 대시보드 — 노트 기반 일정 추적 (로컬 LLM)"
 readme = "README.md"
 requires-python = ">=3.11"

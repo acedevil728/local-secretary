@@ -123,21 +123,37 @@ ollama pull qwen2.5:7b-instruct
   `LLM_ENDPOINTS`에 `주소|모델`. 7~8B와 14B를 평가셋으로 비교해 정하는 게 Phase 0이다.
 - **호출 한 번** ([app/extraction/clients/ollama.py](app/extraction/clients/ollama.py)):
   1. 노드마다 `GET /api/tags`로 응답하는지, 모델이 설치돼 있는지 확인하고 되는 첫 노드를 쓴다.
-  2. `POST /api/chat` 한 번: `stream: false`, `options.temperature: 0`, `format`에 JSON 스키마(구조화 출력).
-     시스템 프롬프트는 [app/extraction/prompt.py](app/extraction/prompt.py)(규칙 4종, "날짜를 계산하지 마라", "근거 문장은 원문 그대로").
-     사용자 메시지는 오늘 날짜, 섹션 제목·본문, 기존 이력 날짜, 기존 규칙을 담은 JSON.
+  2. `POST /api/chat` 한 번: `stream: false`, `temperature: 0`, `num_ctx`(`LLM_NUM_CTX`, 기본 4096), `num_predict: 512`,
+     `keep_alive`(`LLM_KEEP_ALIVE`, 기본 30m), `format`에 JSON 스키마(구조화 출력, 모든 칸 필수).
   3. `LLM_TIMEOUT`(기본 120초) 안에 답이 없거나 연결이 끊기면 다음 노드로. 모두 안 되면 분석만 기다리고
      `LLM_RETRY_SECONDS`(기본 60초)마다 다시 확인한다.
-- **앞뒤에서 코드가 하는 일**: 바뀐 섹션만 하나씩 순서대로 보낸다. 같은 문장·모델·`PROMPT_VERSION`이면 캐시를 쓴다.
-  받은 뒤 검증한다([validate.py](app/extraction/validate.py)): 근거 문장이 원문에 있는지, 간격 1일~5년, RRULE 해석, 미래 이력 제외.
-  신뢰도가 `CONFIDENCE_THRESHOLD`(기본 0.75) 이상이고 애매한 점이 없으면 반영하고, 규칙이 바뀌거나 신뢰도가 낮으면 '확인 필요'로 보낸다.
-  JSON이 깨진 응답도 '확인 필요'로 간다.
-- **아직 안 한 것** (실제 모델을 붙이면서 조정할 곳):
-  - 실제 Ollama로는 아직 돌려 보지 않았다. 테스트는 가짜 Ollama 서버(`tests/fake_ollama/`)로만 했다.
-  - 프롬프트에 예시 문장(few-shot)이 없다.
-  - `num_ctx`(문맥 길이), `keep_alive`(모델을 메모리에 두는 시간)를 지정하지 않아 Ollama 기본값을 쓴다.
-  - 깨진 JSON에 다시 묻지 않는다.
-  - 실제 모델 정확도를 재지 않았다. 아래 "테스트"의 `eval --mode ollama`로 잰다.
+- **프롬프트 v2** ([app/extraction/prompt.py](app/extraction/prompt.py)): 짧은 규칙 설명 + 예시 대화 9개(few-shot) + 실제 입력.
+  - 입력: `{"today", "title", "text", "record_count"}`. 기록 날짜는 주지 않고 개수만 준다(날짜를 주면 작은 모델이 그대로 베꼈다).
+  - 출력: `{"source_quote", "rule": {"kind", "every", "unit", "day_of_month", "weekdays", "month", "date", "holiday_shift"}, "done_dates", "amount", "category"}`.
+    `kind`는 interval / monthly / weekly / yearly / once / learned / none, 요일은 한글 한 글자("화").
+  - LLM은 RRULE을 쓰지 않는다. RRULE, 알림 시점, 허용 구간, 중요도, 신뢰도는 코드가 정한다.
+  - 예시 문장은 평가셋과 겹치지 않게 한다(`tests/test_prompt.py`가 검사). 프롬프트를 바꾸면 `PROMPT_VERSION`을 올린다.
+- **받은 뒤 코드가 하는 일** ([validate.py](app/extraction/validate.py)):
+  - 형식: 필요한 칸, 간격 1일~5년, 날짜 해석.
+  - **근거 확인**: 규칙의 숫자·단위·요일·날짜가 원문에 실제로 있는지("6개월마다"인데 6주, "화·목"인데 토요일 → 확인 필요).
+    매달·매년 규칙은 '매달', '매년' 같은 반복하는 말이 있어야 한다("11월 2일 만료"를 '매달 2일'로 읽은 것 → 확인 필요).
+  - **코드가 이기는 값** ([korean.py](app/extraction/korean.py)): 금액("68만 4천원" → 684000), 간격형의 지난 날짜,
+    "주말이어도 그날"·"휴일이면 다음 영업일" 같은 분명한 휴일 표현. 요일이 붙은 간격형은 요일 규칙("격주 토요일")으로 바꾼다.
+  - 이력 날짜는 원문에 적힌 것(또는 어제·오늘·그제)만 받는다. 지어낸 날짜는 버린다.
+  - 근거 문장이 원문에 없으면 본문 전체를 근거로 두고 확인 필요.
+  - 근거가 다 맞으면 반영, 아니면 '확인 필요'. 기존 규칙과 달라지는 것도 '확인 필요'. JSON이 깨진 응답도 '확인 필요'(다시 묻지는 않는다).
+  - 같은 문장·모델·`PROMPT_VERSION`이면 캐시를 쓴다. 바뀐 섹션만 하나씩 순서대로 보낸다.
+- **모델별 실측**: 새 모델이나 프롬프트를 쓰면 `python -m app eval --mode ollama -v`로 재고 여기에 적는다.
+
+  | 모델 | 프롬프트 | 평가셋 24문장 | 문장당 | 측정 |
+  |---|---|---|---|---|
+  | gemma3:4b (Q4_K_M, Ollama 0.40.2) | v1 | 1/24 (4%) | 약 35초 | 2026-10-11, 개발 노트북 |
+  | gemma3:4b (Q4_K_M, Ollama 0.40.2) | v2 (`2026-10-11.4`) | 23/24 (96%) | 약 14초 | 2026-10-11, 개발 노트북 |
+
+  v2의 남은 오답 1개("여권 11월 2일 만료"를 '매달 2일'로 읽음)는 근거 확인에 걸려 자동 반영되지 않고 '확인 필요'로 간다.
+  평가셋은 24개로 작고 예시와 비슷한 문장이 많아 실제 노트에서는 더 낮을 수 있다. 실제로 쓰는 문장을 평가셋에 계속 더한다.
+  v2가 빨라진 이유는 앞부분(규칙+예시)이 늘 같아 Ollama가 프롬프트 캐시를 재사용하기 때문이다(`keep_alive` 동안).
+  qwen2.5 7B·14B는 아직 재지 않았다.
 
 ## 테스트
 
@@ -145,8 +161,9 @@ ollama pull qwen2.5:7b-instruct
 .venv/Scripts/python -m pytest
 ```
 
-90개. 스케줄러(머리 자르기 10/10 + 5주 = 11/14, 영업일·대체공휴일·말일), 노트 파서·병합, 추출 검증·판정, 가짜 Ollama 서버로
-노드 장애·모델 없음·잘못된 JSON, HTTP 시나리오, 사람 관리, LLM 상태 불.
+103개. 스케줄러(머리 자르기 10/10 + 5주 = 11/14, 영업일·대체공휴일·말일), 노트 파서·병합, 추출 검증·판정,
+프롬프트 v2(예시가 검증을 통과하는지, 평가셋과 안 겹치는지, gemma3:4b가 실제로 지어낸 사례를 잡는지), 가짜 Ollama 서버로
+노드 장애·모델 없음·잘못된 JSON, HTTP 시나리오, 사람 관리, LLM 상태 불, 설정 우선순위.
 
 평가셋(Phase 0)으로 실제 모델 정확도 재기:
 

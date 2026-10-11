@@ -65,17 +65,21 @@ class FakeOllamaServer:
                 if server.bad_json:
                     content = "{이건 JSON이 아님"
                 else:
-                    payload = json.loads(req["messages"][-1]["content"])
+                    payload = json.loads(req["messages"][-1]["content"])  # 프롬프트 v2 입력
                     inp = SectionInput(
-                        heading=payload["section"]["heading"],
-                        text=payload["section"]["text"],
+                        heading=payload["title"],
+                        text=payload["text"],
                         today=payload["today"],
-                        history_dates=payload.get("history_dates") or [],
+                        history_dates=["2000-01-01"] * int(payload.get("record_count") or 0),
                     )
                     content = ExtractionResult(items=[extract_rule_based(inp)]).model_dump_json()
                 self._send(200, json.dumps({"model": req.get("model"), "message": {"role": "assistant", "content": content}, "done": True}))
 
-        self._httpd = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        class QuietServer(ThreadingHTTPServer):
+            def handle_error(self, request, client_address) -> None:
+                pass  # 타임아웃 테스트에서 클라이언트가 먼저 끊으면 나는 연결 오류는 무시
+
+        self._httpd = QuietServer(("127.0.0.1", 0), Handler)
         self.port = self._httpd.server_address[1]
         self._thread = threading.Thread(target=self._httpd.serve_forever, daemon=True)
         self._thread.start()

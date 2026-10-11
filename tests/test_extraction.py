@@ -55,9 +55,10 @@ def test_validate_accepts_good_output():
     assert v.errors == [] and v.proposal.events == [TODAY] and v.proposal.window_days == 3
 
 
-def test_validate_rejects_quote_not_in_text():
+def test_quote_not_in_text_goes_to_review_with_full_text_as_quote():
     v = validate(_item(source_quote="6주에 1번"), heading="머리", text=TEXT, today=TODAY)
-    assert v.proposal is None and "근거 문장이 원문에 없어요" in v.errors
+    assert v.errors == [] and v.proposal.source_quote == TEXT
+    assert any("근거 문장" in a for a in v.ambiguities)  # → 확인 필요
 
 
 def test_validate_rejects_absurd_interval():
@@ -71,7 +72,7 @@ def test_validate_rejects_bad_rrule_and_future_events():
     bad = validate(_item(rule=LLMRule(type="calendar", rrule="FREQ=SOMETIMES")), heading="머리", text=TEXT, today=TODAY)
     assert bad.proposal is None
     fut = validate(_item(events_in_text=["2026-12-01"]), heading="머리", text=TEXT, today=TODAY)
-    assert fut.proposal.events == [] and fut.ambiguities
+    assert fut.proposal.events == [TODAY] and fut.ambiguities  # 미래 날짜는 버리고, 본문의 '10월 10일에 잘랐음'만
 
 
 def test_judge_paths():
@@ -85,5 +86,7 @@ def test_judge_paths():
     assert judge(good, changed, 0.75).review_kind == "rule_change"
     none = validate(_item(rule=None), heading="머리", text=TEXT, today=TODAY)
     assert judge(none, None, 0.75).review_kind == "no_rule"
-    bad = validate(_item(source_quote="없는 말"), heading="머리", text=TEXT, today=TODAY)
-    assert judge(bad, None, 0.75).review_kind == "invalid"
+    off_quote = validate(_item(source_quote="없는 말"), heading="머리", text=TEXT, today=TODAY)
+    assert judge(off_quote, None, 0.75).review_kind == "new_item"
+    broken = validate(_item(rule=LLMRule(type="interval", every=None, unit="week")), heading="머리", text=TEXT, today=TODAY)
+    assert judge(broken, None, 0.75).review_kind == "invalid"

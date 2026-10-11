@@ -62,6 +62,8 @@ class Settings:
     llm_endpoints: tuple[str, ...]
     llm_model: str
     llm_timeout: float
+    llm_num_ctx: int
+    llm_keep_alive: str
     fixtures_dir: Path
     cassettes_dir: Path
     confidence_threshold: float
@@ -123,6 +125,8 @@ def load_settings(
         llm_endpoints=endpoints or ("http://127.0.0.1:11434",),
         llm_model=g("LLM_MODEL") or "qwen2.5:7b-instruct",
         llm_timeout=float(g("LLM_TIMEOUT") or 120),
+        llm_num_ctx=int(g("LLM_NUM_CTX") or 4096),
+        llm_keep_alive=g("LLM_KEEP_ALIVE") or "30m",
         fixtures_dir=_path(g("FIXTURES_DIR"), "tests/fixtures/extraction", root),
         cassettes_dir=_path(g("CASSETTES_DIR"), "tests/cassettes", root),
         confidence_threshold=float(g("CONFIDENCE_THRESHOLD") or 0.75),

@@ -15,7 +15,7 @@ from pydantic import ValidationError
 
 from ...core.config import Settings
 from ..prompt import build_messages
-from ..schema import ExtractionResult, LLMResponse, SectionInput, ollama_format_schema
+from ..schema import ExtractionResult, LLMOutput, LLMResponse, SectionInput, ollama_format_schema
 from .base import BadLLMOutput, LLMUnavailable
 
 log = logging.getLogger(__name__)
@@ -44,16 +44,25 @@ class OllamaClient:
         timeout: float = 120.0,
         health_timeout: float = 3.0,
         http: httpx.Client | None = None,
+        num_ctx: int = 4096,
+        keep_alive: str = "30m",
     ) -> None:
         self.nodes = nodes
         self.timeout = timeout
         self.health_timeout = health_timeout
+        self.num_ctx = num_ctx  # 프롬프트(시스템+예시 ≈ 2천 토큰)가 잘리지 않게 명시한다
+        self.keep_alive = keep_alive  # 모델과 프롬프트 캐시를 메모리에 남겨 두는 시간
         self._http = http or httpx.Client()
         self._active: Node | None = None
 
     @classmethod
     def from_settings(cls, s: Settings) -> "OllamaClient":
-        return cls(parse_endpoints(s.llm_endpoints, s.llm_model), timeout=s.llm_timeout)
+        return cls(
+            parse_endpoints(s.llm_endpoints, s.llm_model),
+            timeout=s.llm_timeout,
+            num_ctx=s.llm_num_ctx,
+            keep_alive=s.llm_keep_alive,
+        )
 
     def model_ids(self) -> list[str]:
         return [f"ollama:{n.model}" for n in self.nodes]
@@ -112,7 +121,8 @@ class OllamaClient:
                         "messages": build_messages(section),
                         "format": ollama_format_schema(),
                         "stream": False,
-                        "options": {"temperature": 0},
+                        "keep_alive": self.keep_alive,
+                        "options": {"temperature": 0, "num_ctx": self.num_ctx, "num_predict": 512},
                     },
                     timeout=self.timeout,
                 )
@@ -135,9 +145,12 @@ def parse_result(content: str) -> ExtractionResult:
         data = json.loads(content)
     except json.JSONDecodeError as exc:
         raise BadLLMOutput(f"JSON이 아니에요: {exc}") from exc
-    if isinstance(data, dict) and "items" not in data and "rule" in data:
-        data = {"items": [data]}  # 작은 모델이 items 없이 항목 하나만 낼 때
     try:
+        if isinstance(data, dict) and "items" not in data and "rule" in data:
+            rule = data.get("rule")
+            if "done_dates" in data or (isinstance(rule, dict) and "kind" in rule):
+                return LLMOutput.model_validate(data).to_result()  # v2 (지금 프롬프트)
+            data = {"items": [data]}  # v1 항목 하나만 낸 경우
         return ExtractionResult.model_validate(data)
     except ValidationError as exc:
         raise BadLLMOutput(f"스키마에 맞지 않아요: {exc.errors()[0].get('msg')}") from exc

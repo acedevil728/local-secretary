@@ -9,18 +9,13 @@ import datetime as dt
 import re
 
 from ...scheduling.rules import monthly_rrule, weekly_rrule, yearly_rrule
+from ..korean import DATE_RE, parse_amount, parse_dates, past_dates
 from ..schema import ExtractedItem, ExtractionResult, LLMResponse, LLMRule, SectionInput
 from .base import local_probe
 
 WD = "월화수목금토일"  # Python weekday() 순서
 UNIT = {"주": "week", "개월": "month", "달": "month", "일": "day", "년": "year"}
 
-DATE_RE = re.compile(
-    r"(?:(?P<y>\d{4})\s*년\s*)?(?P<m>\d{1,2})\s*월\s*(?P<d>\d{1,2})\s*일"
-    r"|(?P<iy>\d{4})-(?P<im>\d{1,2})-(?P<id>\d{1,2})"
-    r"|(?<![\d/])(?P<sm>\d{1,2})/(?P<sd>\d{1,2})(?![\d/])"
-)
-RELATIVE = (("그저께", -2), ("그제", -2), ("어제", -1))
 SEASON_END = {"봄": (5, 31), "여름": (8, 31), "가을": (10, 31), "겨울": (12, 31)}
 DEADLINE_RE = re.compile(r"만료|만기|까지|마감|제출|갱신")
 
@@ -51,36 +46,6 @@ def _adjust(q: str) -> str:
     return "none"
 
 
-def _dates(q: str, today: dt.date) -> list[tuple[dt.date, bool]]:
-    """(날짜, 연도가 적혀 있었는지) 목록."""
-    out = []
-    for m in DATE_RE.finditer(q):
-        try:
-            if m.group("m"):
-                y = int(m.group("y")) if m.group("y") else today.year
-                d = dt.date(y, int(m.group("m")), int(m.group("d")))
-                out.append((d, bool(m.group("y"))))
-            elif m.group("iy"):
-                out.append((dt.date(int(m.group("iy")), int(m.group("im")), int(m.group("id"))), True))
-            else:
-                out.append((dt.date(today.year, int(m.group("sm")), int(m.group("sd"))), False))
-        except ValueError:
-            continue
-    return out
-
-
-def _amount(q: str) -> int | None:
-    if m := re.search(r"(\d+)\s*~\s*(\d+)\s*만\s*원", q):
-        return int((int(m.group(1)) + int(m.group(2))) / 2 * 10000)
-    if m := re.search(r"(\d+)\s*만\s*(?:(\d)\s*천\s*)?원", q):
-        return int(m.group(1)) * 10000 + int(m.group(2) or 0) * 1000
-    if m := re.search(r"(\d+)\s*천\s*원", q):
-        return int(m.group(1)) * 1000
-    if m := re.search(r"(\d[\d,]{3,})\s*원", q):
-        return int(m.group(1).replace(",", ""))
-    return None
-
-
 def _category(s: str) -> str:
     if re.search(r"대출|이자|상환", s):
         return "loan"
@@ -98,7 +63,6 @@ def _category(s: str) -> str:
 def extract_rule_based(inp: SectionInput) -> ExtractedItem:
     q = inp.text
     today = inp.today
-    base_day = inp.saved_at.date() if inp.saved_at else today
     rule: LLMRule | None = None
     conf = 0.3
     frag: str | None = None
@@ -138,18 +102,8 @@ def extract_rule_based(inp: SectionInput) -> ExtractedItem:
         conf, frag = 0.58, m.group(0)
         amb.append("주 2회 요일 규칙으로 읽었어요.")
 
-    dates = _dates(q, today)
-    events: list[dt.date] = []
-    if rule is not None and rule.type == "interval":
-        for d, explicit_year in dates:
-            if d > today and not explicit_year:
-                d = d.replace(year=d.year - 1)
-            if d <= today:
-                events.append(d)
-        for word, off in RELATIVE:
-            if word in q:
-                events.append(base_day + dt.timedelta(days=off))
-                break
+    dates = parse_dates(q, today)
+    events: list[dt.date] = past_dates(q, today) if rule is not None and rule.type == "interval" else []
 
     if rule is None and dates:
         d, _ = dates[0]
@@ -190,7 +144,7 @@ def extract_rule_based(inp: SectionInput) -> ExtractedItem:
         category=category,
         rule=rule,
         events_in_text=[d.isoformat() for d in sorted(set(events))],
-        amount=_amount(q),
+        amount=parse_amount(q),
         importance="high" if category in ("bill", "loan", "saving") else "normal",
         lead_days=lead,
         window_days=window,
