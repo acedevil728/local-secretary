@@ -1,0 +1,42 @@
+# ---- 이 기기의 설정과 비밀: 절대 올리지 않는다 ----
+# 주소·포트·Ollama 노드·토큰·비밀번호는 .env.local 에만 둔다. 예시는 .env.example (이것만 올린다)
+.env
+.env.*
+!.env.example
+*.local
+# 혹시 모를 키·인증서
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+
+# ---- 운영·개발 데이터 (개인 노트, 금액, 기기 토큰 tokens.json, app.db) ----
+data/
+.dev-data/
+.ci-data/
+
+# 실제 Ollama 응답 녹화(record 모드). 실제 노트 문장이 들어갈 수 있어 기본은 올리지 않는다.
+# 평가셋 문장으로만 녹화했을 때만 git add -f tests/cassettes/<파일> 로 올린다.
+tests/cassettes/
+
+# start_* 스크립트의 로그·PID
+logs/
+*.log
+*.pid
+
+# ---- 빌드·의존성·캐시 ----
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+web/node_modules/
+web/dist/
+
+# ---- 편집기·OS·도구 ----
+.claude/settings.local.json
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

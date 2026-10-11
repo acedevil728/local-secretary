@@ -1,0 +1,10 @@
+{
+  "name": "개인 비서 대시보드",
+  "short_name": "비서",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f3f5f2",
+  "theme_color": "#2c5b4e",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

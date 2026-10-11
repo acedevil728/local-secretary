@@ -1,0 +1,148 @@
+[
+  {
+    "id": "hair",
+    "heading": "머리 자르기",
+    "text": "나는 5주에 1번 머리를 잘라. 2026년 10월 10일에 머리를 잘랐음",
+    "expected": {"items": [{"title": "머리 자르기", "category": "routine", "rule": {"type": "interval", "every": 5, "unit": "week", "anchor": "last_event"}, "events_in_text": ["2026-10-10"], "amount": null, "importance": "normal", "lead_days": 3, "window_days": 3, "source_quote": "나는 5주에 1번 머리를 잘라", "confidence": 0.92, "ambiguities": []}]}
+  },
+  {
+    "id": "maintenance-fee",
+    "heading": "아파트 관리비",
+    "text": "관리비는 매달 25일, 휴일이면 다음 영업일에 빠져나감. 보통 23만원 안팎",
+    "expected": {"items": [{"title": "아파트 관리비", "category": "bill", "rule": {"type": "calendar", "rrule": "FREQ=MONTHLY;BYMONTHDAY=25", "adjust": "next_business_day"}, "events_in_text": [], "amount": 230000, "importance": "high", "lead_days": 3, "window_days": 0, "source_quote": "관리비는 매달 25일, 휴일이면 다음 영업일에 빠져나감", "confidence": 0.9, "ambiguities": []}]}
+  },
+  {
+    "id": "loan-interest",
+    "heading": "전세자금대출 이자",
+    "text": "전세대출 이자 매달 15일 자동이체, 41만 2천원",
+    "expected": {"items": [{"title": "전세자금대출 이자", "category": "loan", "rule": {"type": "calendar", "rrule": "FREQ=MONTHLY;BYMONTHDAY=15", "adjust": "next_business_day"}, "events_in_text": [], "amount": 412000, "importance": "high", "lead_days": 3, "window_days": 0, "source_quote": "전세대출 이자 매달 15일 자동이체, 41만 2천원", "confidence": 0.9, "ambiguities": []}]}
+  },
+  {
+    "id": "dental-learned",
+    "heading": "치과 스케일링",
+    "text": "치과 스케일링 다녀온 날 기록",
+    "history_dates": ["2025-10-02", "2026-04-08"],
+    "expected": {"items": [{"title": "치과 스케일링", "category": "health", "rule": {"type": "learned"}, "events_in_text": [], "amount": null, "importance": "normal", "lead_days": 7, "window_days": 7, "source_quote": "치과 스케일링 다녀온 날 기록", "confidence": 0.8, "ambiguities": []}]}
+  },
+  {
+    "id": "engine-oil",
+    "heading": "엔진오일 교환",
+    "text": "엔진오일은 6개월마다 교체. 3월 28일에 갈았음",
+    "expected": {"items": [{"title": "엔진오일 교환", "category": "routine", "rule": {"type": "interval", "every": 6, "unit": "month", "anchor": "last_event"}, "events_in_text": ["2026-03-28"], "amount": null, "importance": "normal", "lead_days": 7, "window_days": 7, "source_quote": "엔진오일은 6개월마다 교체", "confidence": 0.9, "ambiguities": []}]}
+  },
+  {
+    "id": "gym-expiry",
+    "heading": "헬스장 회원권 만료",
+    "text": "헬스장 회원권 10월 20일 만료. 3개월 33만원으로 갱신할지 결정",
+    "expected": {"items": [{"title": "헬스장 회원권 만료", "category": "renewal", "rule": {"type": "once", "date": "2026-10-20"}, "events_in_text": [], "amount": 330000, "importance": "normal", "lead_days": 14, "window_days": 0, "source_quote": "헬스장 회원권 10월 20일 만료", "confidence": 0.85, "ambiguities": []}]}
+  },
+  {
+    "id": "nail",
+    "heading": "네일 관리",
+    "text": "네일은 3주마다. 9/26에 받음",
+    "expected": {"items": [{"title": "네일 관리", "category": "routine", "rule": {"type": "interval", "every": 3, "unit": "week", "anchor": "last_event"}, "events_in_text": ["2026-09-26"], "amount": null, "importance": "normal", "lead_days": 3, "window_days": 3, "source_quote": "네일은 3주마다", "confidence": 0.9, "ambiguities": []}]}
+  },
+  {
+    "id": "phone-bill",
+    "heading": "휴대폰 요금",
+    "text": "휴대폰 요금 매달 21일 카드 자동결제, 6만 8천원 정도",
+    "expected": {"items": [{"title": "휴대폰 요금", "category": "bill", "rule": {"type": "calendar", "rrule": "FREQ=MONTHLY;BYMONTHDAY=21", "adjust": "next_business_day"}, "events_in_text": [], "amount": 68000, "importance": "high", "lead_days": 3, "window_days": 0, "source_quote": "휴대폰 요금 매달 21일 카드 자동결제, 6만 8천원 정도", "confidence": 0.88, "ambiguities": []}]}
+  },
+  {
+    "id": "savings",
+    "heading": "적금 납입",
+    "text": "적금 매달 10일 50만원 (주말이어도 그날 이체)",
+    "expected": {"items": [{"title": "적금 납입", "category": "saving", "rule": {"type": "calendar", "rrule": "FREQ=MONTHLY;BYMONTHDAY=10", "adjust": "none"}, "events_in_text": [], "amount": 500000, "importance": "high", "lead_days": 1, "window_days": 0, "source_quote": "적금 매달 10일 50만원 (주말이어도 그날 이체)", "confidence": 0.9, "ambiguities": []}]}
+  },
+  {
+    "id": "lens",
+    "heading": "콘택트렌즈 교체",
+    "text": "2주용 렌즈, 10월 1일에 새로 뜯음",
+    "expected": {"items": [{"title": "콘택트렌즈 교체", "category": "health", "rule": {"type": "interval", "every": 2, "unit": "week", "anchor": "last_event"}, "events_in_text": ["2026-10-01"], "amount": null, "importance": "normal", "lead_days": 1, "window_days": 1, "source_quote": "2주용 렌즈, 10월 1일에 새로 뜯음", "confidence": 0.85, "ambiguities": []}]}
+  },
+  {
+    "id": "passport",
+    "heading": "여권 만료 확인",
+    "text": "여권 11월 2일 만료, 해외여행 전에 재발급",
+    "expected": {"items": [{"title": "여권 만료 확인", "category": "renewal", "rule": {"type": "once", "date": "2026-11-02"}, "events_in_text": [], "amount": null, "importance": "normal", "lead_days": 14, "window_days": 0, "source_quote": "여권 11월 2일 만료, 해외여행 전에 재발급", "confidence": 0.9, "ambiguities": []}]}
+  },
+  {
+    "id": "gas-month-end",
+    "heading": "도시가스 요금",
+    "text": "도시가스는 매달 말일 출금, 휴일이면 다음 영업일. 3만 8천원 정도",
+    "expected": {"items": [{"title": "도시가스 요금", "category": "bill", "rule": {"type": "calendar", "rrule": "FREQ=MONTHLY;BYMONTHDAY=-1", "adjust": "next_business_day"}, "events_in_text": [], "amount": 38000, "importance": "high", "lead_days": 3, "window_days": 0, "source_quote": "도시가스는 매달 말일 출금, 휴일이면 다음 영업일", "confidence": 0.9, "ambiguities": []}]}
+  },
+  {
+    "id": "car-insurance",
+    "heading": "자동차 보험 갱신",
+    "text": "자동차 보험 10월 28일 만기. 작년 68만 4천원",
+    "expected": {"items": [{"title": "자동차 보험 갱신", "category": "renewal", "rule": {"type": "once", "date": "2026-10-28"}, "events_in_text": [], "amount": 684000, "importance": "high", "lead_days": 10, "window_days": 0, "source_quote": "자동차 보험 10월 28일 만기", "confidence": 0.88, "ambiguities": []}]}
+  },
+  {
+    "id": "water-filter",
+    "heading": "정수기 필터 교체",
+    "text": "정수기 필터 4개월마다. 6/20 교체함",
+    "expected": {"items": [{"title": "정수기 필터 교체", "category": "routine", "rule": {"type": "interval", "every": 4, "unit": "month", "anchor": "last_event"}, "events_in_text": ["2026-06-20"], "amount": null, "importance": "low", "lead_days": 5, "window_days": 7, "source_quote": "정수기 필터 4개월마다", "confidence": 0.9, "ambiguities": []}]}
+  },
+  {
+    "id": "electricity-range",
+    "heading": "전기요금",
+    "text": "매달 25일 자동이체. 보통 4~6만원.",
+    "expected": {"items": [{"title": "전기요금", "category": "bill", "rule": {"type": "calendar", "rrule": "FREQ=MONTHLY;BYMONTHDAY=25", "adjust": "next_business_day"}, "events_in_text": [], "amount": 50000, "importance": "high", "lead_days": 3, "window_days": 0, "source_quote": "매달 25일 자동이체", "confidence": 0.88, "ambiguities": []}]}
+  },
+  {
+    "id": "yoga-weekly",
+    "heading": "요가",
+    "text": "요가는 매주 화·목요일 저녁",
+    "expected": {"items": [{"title": "요가", "category": "routine", "rule": {"type": "calendar", "rrule": "FREQ=WEEKLY;BYDAY=TU,TH", "adjust": "none"}, "events_in_text": [], "amount": null, "importance": "normal", "lead_days": 0, "window_days": 0, "source_quote": "요가는 매주 화·목요일 저녁", "confidence": 0.85, "ambiguities": []}]}
+  },
+  {
+    "id": "recycling-biweekly",
+    "heading": "분리수거",
+    "text": "분리수거는 격주 토요일",
+    "expected": {"items": [{"title": "분리수거", "category": "routine", "rule": {"type": "calendar", "rrule": "FREQ=WEEKLY;INTERVAL=2;BYDAY=SA", "adjust": "none"}, "events_in_text": [], "amount": null, "importance": "normal", "lead_days": 1, "window_days": 0, "source_quote": "분리수거는 격주 토요일", "confidence": 0.7, "ambiguities": ["격주가 어느 주부터인지 확인해 주세요."]}]}
+  },
+  {
+    "id": "deadline-once",
+    "heading": "서류 제출",
+    "text": "12월 18일까지 서류 제출",
+    "expected": {"items": [{"title": "서류 제출", "category": "other", "rule": {"type": "once", "date": "2026-12-18"}, "events_in_text": [], "amount": null, "importance": "normal", "lead_days": 7, "window_days": 0, "source_quote": "12월 18일까지 서류 제출", "confidence": 0.9, "ambiguities": []}]}
+  },
+  {
+    "id": "daily-medicine",
+    "heading": "혈압약",
+    "text": "매일 아침 혈압약 복용",
+    "expected": {"items": [{"title": "혈압약", "category": "health", "rule": {"type": "interval", "every": 1, "unit": "day", "anchor": "last_event"}, "events_in_text": [], "amount": null, "importance": "normal", "lead_days": 0, "window_days": 0, "source_quote": "매일 아침 혈압약 복용", "confidence": 0.85, "ambiguities": []}]}
+  },
+  {
+    "id": "relative-yesterday",
+    "heading": "화분 물주기",
+    "text": "10일마다 줘야 함. 어제 물 줌",
+    "expected": {"items": [{"title": "화분 물주기", "category": "routine", "rule": {"type": "interval", "every": 10, "unit": "day", "anchor": "last_event"}, "events_in_text": ["2026-10-09"], "amount": null, "importance": "normal", "lead_days": 1, "window_days": 1, "source_quote": "10일마다 줘야 함", "confidence": 0.88, "ambiguities": []}]}
+  },
+  {
+    "id": "plant-prototype-hint",
+    "heading": "화분",
+    "text": "4주마다 화분 물주기. 10월 3일에 줌",
+    "expected": {"items": [{"title": "화분", "category": "routine", "rule": {"type": "interval", "every": 4, "unit": "week", "anchor": "last_event"}, "events_in_text": ["2026-10-03"], "amount": null, "importance": "normal", "lead_days": 3, "window_days": 3, "source_quote": "4주마다 화분 물주기", "confidence": 0.9, "ambiguities": []}]}
+  },
+  {
+    "id": "rent-month-end",
+    "heading": "월세",
+    "text": "월세는 매달 말일 자동이체, 55만원",
+    "expected": {"items": [{"title": "월세", "category": "bill", "rule": {"type": "calendar", "rrule": "FREQ=MONTHLY;BYMONTHDAY=-1", "adjust": "next_business_day"}, "events_in_text": [], "amount": 550000, "importance": "high", "lead_days": 3, "window_days": 0, "source_quote": "월세는 매달 말일 자동이체, 55만원", "confidence": 0.9, "ambiguities": []}]}
+  },
+  {
+    "id": "year-boundary",
+    "heading": "머리 자르기",
+    "today": "2027-01-05",
+    "text": "5주에 1번 자름. 12월 20일에 잘랐음",
+    "expected": {"items": [{"title": "머리 자르기", "category": "routine", "rule": {"type": "interval", "every": 5, "unit": "week", "anchor": "last_event"}, "events_in_text": ["2026-12-20"], "amount": null, "importance": "normal", "lead_days": 3, "window_days": 3, "source_quote": "5주에 1번 자름", "confidence": 0.9, "ambiguities": []}]}
+  },
+  {
+    "id": "no-rule",
+    "heading": "언젠가",
+    "text": "언젠가 해야 함",
+    "expected": {"items": [{"title": "언젠가", "category": "other", "rule": null, "events_in_text": [], "amount": null, "importance": "normal", "lead_days": null, "window_days": null, "source_quote": "", "confidence": 0.2, "ambiguities": ["주기나 날짜가 없어요"]}]}
+  }
+]

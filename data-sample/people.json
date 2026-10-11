@@ -1,0 +1,7 @@
+{
+  "people": [
+    {"id": "p1", "name": "지훈", "color": "#3866d1", "color_dark": "#7fa2f2", "notify": [{"type": "app"}]},
+    {"id": "p2", "name": "수아", "color": "#c04c78", "color_dark": "#ec8db1", "notify": [{"type": "app"}]},
+    {"id": "p3", "name": "민호", "color": "#7a58d0", "color_dark": "#ad94ee", "notify": [{"type": "app"}]}
+  ]
+}
