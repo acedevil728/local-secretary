@@ -3,6 +3,13 @@
 형식: 버전마다 **사용자에게 보이는 변화**, **아키텍처 변경**, **API 변경**, **운영자가 할 일**을 나눠 적는다.
 구조 결정의 이유는 [architecture.md의 결정 기록](architecture.md#10-결정-기록-adr)에 번호로 남긴다.
 
+## [Unreleased]
+
+### 문서
+- README에 "로컬 LLM(Ollama)을 어떻게 부르나" 절 추가: 모델, 호출 흐름(`/api/tags` → `/api/chat`, 구조화 출력, temperature 0,
+  타임아웃·노드 넘김), 검증·판정, 아직 안 한 것(few-shot, `num_ctx`·`keep_alive`, JSON 재요청, 실제 Ollama 미검증).
+- architecture.md §5.1에 같은 한계를 적었다.
+
 ## [0.2.2] - 2026-10-11
 
 사용자 요청: 포트·Ollama IP처럼 바뀔 수 있는 값은 env로, GitHub에 올리므로 보안 정보는 git 제외,

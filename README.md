@@ -117,6 +117,28 @@ ollama pull qwen2.5:7b-instruct
 
 모델 이름은 예시다. Phase 0 평가셋 결과로 정한다.
 
+### 로컬 LLM(Ollama)을 어떻게 부르나
+
+- **모델**: `LLM_MODEL`(기본 `qwen2.5:7b-instruct`, RTX 3070 8GB에 들어가는 크기로 고른 임시값). 노드마다 다르게 하려면
+  `LLM_ENDPOINTS`에 `주소|모델`. 7~8B와 14B를 평가셋으로 비교해 정하는 게 Phase 0이다.
+- **호출 한 번** ([app/extraction/clients/ollama.py](app/extraction/clients/ollama.py)):
+  1. 노드마다 `GET /api/tags`로 응답하는지, 모델이 설치돼 있는지 확인하고 되는 첫 노드를 쓴다.
+  2. `POST /api/chat` 한 번: `stream: false`, `options.temperature: 0`, `format`에 JSON 스키마(구조화 출력).
+     시스템 프롬프트는 [app/extraction/prompt.py](app/extraction/prompt.py)(규칙 4종, "날짜를 계산하지 마라", "근거 문장은 원문 그대로").
+     사용자 메시지는 오늘 날짜, 섹션 제목·본문, 기존 이력 날짜, 기존 규칙을 담은 JSON.
+  3. `LLM_TIMEOUT`(기본 120초) 안에 답이 없거나 연결이 끊기면 다음 노드로. 모두 안 되면 분석만 기다리고
+     `LLM_RETRY_SECONDS`(기본 60초)마다 다시 확인한다.
+- **앞뒤에서 코드가 하는 일**: 바뀐 섹션만 하나씩 순서대로 보낸다. 같은 문장·모델·`PROMPT_VERSION`이면 캐시를 쓴다.
+  받은 뒤 검증한다([validate.py](app/extraction/validate.py)): 근거 문장이 원문에 있는지, 간격 1일~5년, RRULE 해석, 미래 이력 제외.
+  신뢰도가 `CONFIDENCE_THRESHOLD`(기본 0.75) 이상이고 애매한 점이 없으면 반영하고, 규칙이 바뀌거나 신뢰도가 낮으면 '확인 필요'로 보낸다.
+  JSON이 깨진 응답도 '확인 필요'로 간다.
+- **아직 안 한 것** (실제 모델을 붙이면서 조정할 곳):
+  - 실제 Ollama로는 아직 돌려 보지 않았다. 테스트는 가짜 Ollama 서버(`tests/fake_ollama/`)로만 했다.
+  - 프롬프트에 예시 문장(few-shot)이 없다.
+  - `num_ctx`(문맥 길이), `keep_alive`(모델을 메모리에 두는 시간)를 지정하지 않아 Ollama 기본값을 쓴다.
+  - 깨진 JSON에 다시 묻지 않는다.
+  - 실제 모델 정확도를 재지 않았다. 아래 "테스트"의 `eval --mode ollama`로 잰다.
+
 ## 테스트
 
 ```bash
